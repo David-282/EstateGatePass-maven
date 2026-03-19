@@ -1,19 +1,21 @@
 package com.estatepass.controllers;
 
 import com.estatepass.dtos.requests.OnboardResidentRequest;
+import com.estatepass.services.GateAccessServices;
 import com.estatepass.services.ResidentManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/estate-manager")
 public class EstateManagerControllers {
 
     @Autowired
     private ResidentManagementService residentManagementService;
+
+    @Autowired
+    private GateAccessServices gateAccessServices;
 
 
     @PostMapping("/onboard-resident")
@@ -22,8 +24,26 @@ public class EstateManagerControllers {
         return ResponseEntity.status(201).body(residentManagementService.onboardingResident(request));
     }
 
+    @DeleteMapping("/delete-resident/{phoneNumber}")
+    public ResponseEntity <?> deleteResident (@PathVariable String phoneNumber){
 
-//        return ResponseEntity.status(201).body(gateAccessServices.generateResidentEntryCode(request));
+        return ResponseEntity.status(201).body(residentManagementService.deleteResident(phoneNumber));
+        
+    }
+  
+    @PatchMapping("/disable-resident/{phoneNumber}")
+    public ResponseEntity<?> disableResident (@PathVariable String phoneNumber){
 
+        return ResponseEntity.status(201).body(residentManagementService.disableResident(phoneNumber));
+    }
 
+    @GetMapping("/view-residents")
+    public ResponseEntity<?> viewResidents() {
+        return ResponseEntity.status(200).body(residentManagementService.viewResident());
+    }
+
+    @GetMapping("/view-all-gate-passes")
+    public ResponseEntity<?> viewAllGatePasses() {
+        return ResponseEntity.status(200).body(gateAccessServices.viewAllGatePasses());
+    }
 }
