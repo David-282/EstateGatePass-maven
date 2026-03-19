@@ -1,6 +1,8 @@
 package com.estatepass.controllers;
 
 import com.estatepass.dtos.requests.OnboardResidentRequest;
+import com.estatepass.exceptions.ResidentAlreadyRegisteredException;
+import com.estatepass.exceptions.ResidentDoesNotExistException;
 import com.estatepass.services.GateAccessServices;
 import com.estatepass.services.ResidentManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,22 +21,31 @@ public class EstateManagerControllers {
 
 
     @PostMapping("/onboard-resident")
-    public ResponseEntity<?> onboardResident (@RequestBody OnboardResidentRequest request){
+    public ResponseEntity<?> onboardResident (@RequestBody OnboardResidentRequest request) {
 
-        return ResponseEntity.status(201).body(residentManagementService.onboardingResident(request));
+        try {
+            return ResponseEntity.status(201).body(residentManagementService.onboardingResident(request));
+        }catch (ResidentAlreadyRegisteredException exception){
+            return ResponseEntity.status(400).body(exception.getMessage());
+        }
     }
 
     @DeleteMapping("/delete-resident/{phoneNumber}")
     public ResponseEntity <?> deleteResident (@PathVariable String phoneNumber){
-
-        return ResponseEntity.status(201).body(residentManagementService.deleteResident(phoneNumber));
-        
+        try{
+        return ResponseEntity.status(200).body(residentManagementService.deleteResident(phoneNumber));}
+        catch (ResidentDoesNotExistException exception){
+            return ResponseEntity.status(404).body(exception.getMessage());
+        }
     }
   
     @PatchMapping("/disable-resident/{phoneNumber}")
     public ResponseEntity<?> disableResident (@PathVariable String phoneNumber){
-
-        return ResponseEntity.status(201).body(residentManagementService.disableResident(phoneNumber));
+        try {
+            return ResponseEntity.status(200).body(residentManagementService.disableResident(phoneNumber));
+        } catch (ResidentDoesNotExistException exception) {
+            return ResponseEntity.status(404).body(exception.getMessage());
+        }
     }
 
     @GetMapping("/view-residents")
