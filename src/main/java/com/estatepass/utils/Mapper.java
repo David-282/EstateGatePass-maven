@@ -82,7 +82,7 @@ public class Mapper {
 
         ValidateCodeResponse response = new ValidateCodeResponse();
         response.setCodeType(request.getCodeType());
-        response.setValid(true);
+        response.setUsed(true);
         response.setVisitorsName(pass.getVisitor().getName());
         response.setResidentName(resident.getName());
 

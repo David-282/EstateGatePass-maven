@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import com.estatepass.utils.RandomCodeGenerator;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.estatepass.utils.Mapper.extendCodeMap;
@@ -70,15 +71,21 @@ public class GateAccessServices {
 
     public String disableCode(String code) {
 
-        GatePass pass = gatePassRepository.findByCode(code).orElseThrow(() -> new GatePassDoesNotExist("GatePass does not exist"));
+        if (code.length() != 10){
+            throw new IllegalArgumentException("The length of the code must be exactly 10, not more than or less than.");
+        }
 
-//        validateCodeExistence(pass);
+        GatePass pass = gatePassRepository.findByCode(code).orElseThrow(() -> new GatePassDoesNotExist("GatePass does not exist"));
 
         validatingIfCodeIsActive(pass);
 
-        Resident resident = residentRepository.findById(pass.getResidentId()).get();
+        Resident resident = residentRepository.findById(pass.getResidentId()).orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));
 
         validateResidentIsActive(resident);
+
+        if(pass.isUsed()){
+            throw new InvalidGatePassException("GatePass is used,So therefore it cannot be disabled.");
+        }
 
         pass.setValid(false);
         gatePassRepository.save(pass);
@@ -90,13 +97,17 @@ public class GateAccessServices {
     public ValidateCodeResponse validateCode(ValidateCodeRequest request) {
 
         GatePass pass = gatePassRepository.findByCode(request.getCode()).orElseThrow(() -> new InvalidGatePassException("GatePass does not exist"));
-//        validateCodeExistence(pass);
         Resident resident = residentRepository.findById(pass.getResidentId()).get();
         validatingIfCodeIsActive(pass);
 
         if (!pass.isValid()) {
-            throw new InvalidGatePassException("Gatepass is not active ");
+            throw new InvalidGatePassException("Gate pass is not active ");
         }
+
+        if(pass.isUsed()){
+            throw new InvalidGatePassException("GatePass is already used");
+        }
+
 
 //        ValidateCodeResponse response = new ValidateCodeResponse();
 //        response.setCodeType(request.getCodeType());
@@ -157,9 +168,13 @@ public class GateAccessServices {
             throw new InvalidGatePassException("Code Has been disabled.");
         }
 
+        if (!pass.isUsed()){
+            throw new InvalidGatePassException("GatePass has not been used,It cannot be used to generate an exit code.");
+        }
+
         validateResidentIsActive(resident);
 
-        pass.setValid(false);
+//        pass.setValid(true);
 
         GatePass existCode = map(pass, request);
         existCode.setCode(generateCode());
@@ -199,6 +214,10 @@ public class GateAccessServices {
 //        validateCodeExistence(pass);
         validatingIfCodeIsActive(pass);
 
+        if (pass.isUsed()){
+            throw new InvalidGatePassException("GatePass is already used");
+        }
+
         if (!pass.isValid()) {
             throw new InvalidGatePassException("Code is not active.");
         }
@@ -213,6 +232,10 @@ public class GateAccessServices {
 
 
     public List<GatePass> viewAllGatePasses() {
+        List <GatePass> gatePasses = new ArrayList<>();
+
+
+
         return gatePassRepository.findAll();
     }
     private static void validatingIfCodeIsActive(GatePass pass) {

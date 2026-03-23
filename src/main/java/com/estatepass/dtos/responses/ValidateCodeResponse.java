@@ -8,6 +8,7 @@ public class ValidateCodeResponse {
     private String residentName;
     private String visitorsName;
     private Type codeType;
+    private boolean isUsed;
     private boolean isValid;
 
 

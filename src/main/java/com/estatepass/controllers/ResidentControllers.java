@@ -44,12 +44,12 @@ public class ResidentControllers {
     @PostMapping("/generate-visitor-entry-code")
     public ResponseEntity<?> generateVisitorEntryCode(@RequestBody GenerateVisitorEntryCodeRequest request){
         try {
-        return ResponseEntity.status(201).body(gateAccessServices.generateVisitorsEntryCode(request));
+            return ResponseEntity.status(201).body(gateAccessServices.generateVisitorsEntryCode(request));
         } catch (ResidentDoesNotExistException exception) {
-        return ResponseEntity.status(404).body(exception.getMessage());
-    } catch (ResidentDisabledException exception) {
-        return ResponseEntity.status(400).body(exception.getMessage());
-    }
+            return ResponseEntity.status(404).body(exception.getMessage());
+        } catch (ResidentDisabledException exception) {
+            return ResponseEntity.status(400).body(exception.getMessage());
+        }
     }
 
     @PostMapping("/generate-exit-code")
