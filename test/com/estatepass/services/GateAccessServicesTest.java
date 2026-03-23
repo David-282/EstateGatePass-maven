@@ -212,7 +212,7 @@ class GateAccessServicesTest {
     void testViewAllGatePassesReturnsCorrectList() {
         gatePassServices.generateVisitorsEntryCode(buildVisitorRequest(residentId));
         gatePassServices.generateVisitorsEntryCode(buildVisitorRequest(secondResidentId));
-        List<GatePass> passes = gatePassServices.viewAllGatePasses();
+        List<ViewAllGatePassesResponse> passes = gatePassServices.viewAllGatePasses();
         assertEquals(2, passes.size());
     }
 

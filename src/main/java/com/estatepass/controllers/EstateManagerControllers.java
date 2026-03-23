@@ -50,7 +50,7 @@ public class EstateManagerControllers {
 
     @GetMapping("/view-residents")
     public ResponseEntity<?> viewResidents() {
-        return ResponseEntity.status(200).body(residentManagementService.viewResident());
+        return ResponseEntity.status(200).body(residentManagementService.viewResidents());
     }
 
     @GetMapping("/view-all-gate-passes")

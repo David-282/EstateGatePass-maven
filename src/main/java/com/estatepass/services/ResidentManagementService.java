@@ -1,16 +1,18 @@
 package com.estatepass.services;
 
-import com.estatepass.data.models.GatePass;
 import com.estatepass.data.models.Resident;
 import com.estatepass.data.repositories.ResidentRepository;
 import com.estatepass.dtos.requests.OnboardResidentRequest;
 import com.estatepass.dtos.responses.OnboardResidentResponse;
-import com.estatepass.exceptions.GatePassDoesNotExist;
+import com.estatepass.dtos.responses.ViewAllResidentsResponse;
 import com.estatepass.exceptions.ResidentAlreadyRegisteredException;
+import com.estatepass.exceptions.ResidentDisabledException;
 import com.estatepass.exceptions.ResidentDoesNotExistException;
+import com.estatepass.exceptions.ResidentEnabledException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,11 +51,15 @@ public OnboardResidentResponse onboardingResident(OnboardResidentRequest onboard
 
 
     public String disableResident (String phoneNumber){
-      Resident resident = residentRepository.findByPhoneNumber(phoneNumber).orElseThrow(() -> new ResidentDoesNotExistException("Resident does exist"));
+      Resident resident = residentRepository.findByPhoneNumber(phoneNumber).orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));
 
 //        if (resident == null){
 //            throw new ResidentDoesNotExistException("Resident Does not exist.");
 //        }
+
+        if(!resident.isEnabled()){
+            throw new ResidentDisabledException("Resident is already disabled");
+        }
 
       resident.setEnabled(false);
 
@@ -62,8 +68,22 @@ public OnboardResidentResponse onboardingResident(OnboardResidentRequest onboard
       return (resident.getName())+" Has Successfully been Disabled Until further Notice";
     }
 
+
+    public String enableResident (String phoneNumber){
+    Resident resident = residentRepository.findByPhoneNumber(phoneNumber).orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));
+
+    if(resident.isEnabled()){
+        throw new ResidentEnabledException("Resident is not Disabled");
+    }
+    resident.setEnabled(true);
+
+    residentRepository.save(resident);
+
+    return resident.getName()+" is no more disabled, he or she can fully use the system now.";
+    }
+
     public String deleteResident (String phoneNumber){
-        Resident resident = residentRepository.findByPhoneNumber(phoneNumber).orElseThrow(() -> new ResidentDoesNotExistException("Resident Does "));
+        Resident resident = residentRepository.findByPhoneNumber(phoneNumber).orElseThrow(() -> new ResidentDoesNotExistException("Resident Does not exsit"));
 
 //        if (resident == null){
 //            throw new ResidentDoesNotExistException("Resident Does not exist.");
@@ -74,8 +94,23 @@ public OnboardResidentResponse onboardingResident(OnboardResidentRequest onboard
         return "Resident Has been Deleted.";
     }
 
-    public List<Resident> viewResident (){
-        return residentRepository.findAll();
+    public List<ViewAllResidentsResponse> viewResidents (){
+
+        List<ViewAllResidentsResponse> residents = new ArrayList<>();
+
+
+        for(Resident resident: residentRepository.findAll()){
+            ViewAllResidentsResponse response = new ViewAllResidentsResponse();
+            response.setName(resident.getName());
+            response.setEnabled(resident.isEnabled());
+            response.setAddress(resident.getHouseAddress());
+            response.setPhoneNumber(resident.getPhoneNumber());
+
+            residents.add(response);
+
+        }
+
+        return residents;
     }
 
     private void validationForDuplicate(Optional<Resident> resident){

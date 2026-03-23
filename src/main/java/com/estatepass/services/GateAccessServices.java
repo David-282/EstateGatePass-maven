@@ -231,12 +231,44 @@ public class GateAccessServices {
     }
 
 
-    public List<GatePass> viewAllGatePasses() {
-        List <GatePass> gatePasses = new ArrayList<>();
+    //         *     private String residentName;
+    public List<ViewAllGatePassesResponse> viewAllGatePasses() {
+        List <ViewAllGatePassesResponse> gatePasses = new ArrayList<>();
+
+        /**
+//         *     private String code;
+//         *     private String visitorsName;
+//         *     private String purposeOfComing;
+//         *     private String visitorsPhoneNumber;
+//         *     private String residentPhoneNumber;
+//         *     private String residentAddress;
+         *
+         */
+
+        for (GatePass pass: gatePassRepository.findAll()) {
+            ViewAllGatePassesResponse  response = new ViewAllGatePassesResponse();
+            response.setCode(pass.getCode());
+
+            if (pass.getVisitor() != null) {
+                response.setVisitorsName(pass.getVisitor().getName());
+                response.setVisitorsPhoneNumber(pass.getVisitor().getPhoneNumber());
+                response.setPurposeOfComing(pass.getVisitor().getPurposeOfComing());
+            }
+            else {
+                response.setVisitorsName("Resident GatePass");
+            }
+
+            Resident resident   = residentRepository.findById(pass.getResidentId()).get();
+            response.setResidentName(resident.getName());
+            response.setResidentPhoneNumber(resident.getPhoneNumber());
+            response.setResidentAddress(resident.getHouseAddress());
+
+            gatePasses.add(response);
+        }
 
 
 
-        return gatePassRepository.findAll();
+        return gatePasses;
     }
     private static void validatingIfCodeIsActive(GatePass pass) {
         if (LocalDateTime.now().isAfter(pass.getExpirationDate())) {

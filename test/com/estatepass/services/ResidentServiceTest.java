@@ -3,6 +3,7 @@ package com.estatepass.services;
 import com.estatepass.data.repositories.ResidentRepository;
 import com.estatepass.dtos.requests.OnboardResidentRequest;
 import com.estatepass.dtos.responses.OnboardResidentResponse;
+import com.estatepass.dtos.responses.ViewAllResidentsResponse;
 import com.estatepass.exceptions.ResidentAlreadyRegisteredException;
 import com.estatepass.exceptions.ResidentDoesNotExistException;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +56,7 @@ class ResidentServiceTest {
     void testOnboardMultipleResidentsSuccessfully() {
         residentService.onboardingResident(firstRequest);
         residentService.onboardingResident(secondRequest);
-        List<Resident> residents = residentService.viewResident();
+        List<ViewAllResidentsResponse> residents = residentService.viewResidents();
         assertEquals(2, residents.size());
     }
 
@@ -96,8 +97,8 @@ class ResidentServiceTest {
     void testDisabledResidentIsActuallyDisabled() {
         residentService.onboardingResident(firstRequest);
         residentService.disableResident("08011111111");
-        List<Resident> residents = residentService.viewResident();
-        Resident resident = residents.get(0);
+        List<ViewAllResidentsResponse> residents = residentService.viewResidents();
+        ViewAllResidentsResponse resident = residents.get(0);
         assertFalse(resident.isEnabled());
     }
 
@@ -106,7 +107,7 @@ class ResidentServiceTest {
         residentService.onboardingResident(firstRequest);
         residentService.onboardingResident(secondRequest);
         residentService.deleteResident("08011111111");
-        List<Resident> residents = residentService.viewResident();
+        List<ViewAllResidentsResponse> residents = residentService.viewResidents();
         assertEquals(1, residents.size());
     }
 
@@ -118,7 +119,7 @@ class ResidentServiceTest {
 
     @Test
     void testViewAllResidentsReturnsEmptyListInitially() {
-        List<Resident> residents = residentService.viewResident();
+        List<ViewAllResidentsResponse> residents = residentService.viewResidents();
         assertTrue(residents.isEmpty());
     }
 
@@ -126,29 +127,28 @@ class ResidentServiceTest {
     void testViewAllResidentsReturnsCorrectList() {
         residentService.onboardingResident(firstRequest);
         residentService.onboardingResident(secondRequest);
-        List<Resident> residents = residentService.viewResident();
+        List<ViewAllResidentsResponse> residents = residentService.viewResidents();
         assertEquals(2, residents.size());
     }
 
     @Test
     void testResidentIsEnabledAfterOnboarding() {
         residentService.onboardingResident(firstRequest);
-        List<Resident> residents = residentService.viewResident();
+        List<ViewAllResidentsResponse> residents = residentService.viewResidents();
         assertTrue(residents.get(0).isEnabled());
     }
 
     @Test
     void testResidentHasIdAfterOnboarding() {
         residentService.onboardingResident(firstRequest);
-        List<Resident> residents = residentService.viewResident();
-        assertNotNull(residents.get(0).getId());
-        assertFalse(residents.get(0).getId().isEmpty());
+        Resident resident = residentRepository.findByPhoneNumber(firstRequest.getPhoneNumber()).get();
+        assertFalse(resident.getId().isEmpty());
     }
 
     @Test
     void testResidentHasDateRegisteredAfterOnboarding() {
         residentService.onboardingResident(firstRequest);
-        List<Resident> residents = residentService.viewResident();
-        assertNotNull(residents.get(0).getDateRegistered());
+        Resident resident = residentRepository.findByPhoneNumber(firstRequest.getPhoneNumber()).get();
+        assertNotNull(resident.getDateRegistered());
     }
 }
