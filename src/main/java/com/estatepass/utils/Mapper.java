@@ -83,7 +83,12 @@ public class Mapper {
         ValidateCodeResponse response = new ValidateCodeResponse();
         response.setCodeType(request.getCodeType());
         response.setUsed(true);
-        response.setVisitorsName(pass.getVisitor().getName());
+
+        if (pass.getVisitor() != null) {
+            response.setVisitorsName(pass.getVisitor().getName());
+        } else {
+            response.setVisitorsName("N/A");
+        }
         response.setResidentName(resident.getName());
 
         return response;
@@ -138,11 +143,10 @@ public class Mapper {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         response.setValidTill(existCode.getExpirationDate().format(formatter));
 
-        if (pass.getVisitor() == null){
+        if (pass.getVisitor() == null) {
             response.setName(resident.getName());
-        }
-        else{
-            response.setHouseAddress(pass.getVisitor().getName());
+        } else {
+            response.setName(pass.getVisitor().getName());
         }
         return response;
     }

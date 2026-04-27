@@ -7,7 +7,7 @@ import com.estatepass.data.repositories.GatePassRepository;
 import com.estatepass.data.repositories.ResidentRepository;
 import com.estatepass.dtos.requests.*;
 import com.estatepass.dtos.responses.*;
-import com.estatepass.exceptions.GatePassDoesNotExist;
+import com.estatepass.exceptions.GatePassDoesNotExistException;
 import com.estatepass.exceptions.InvalidGatePassException;
 import com.estatepass.exceptions.ResidentDisabledException;
 import com.estatepass.exceptions.ResidentDoesNotExistException;
@@ -75,7 +75,7 @@ public class GateAccessServices {
             throw new IllegalArgumentException("The length of the code must be exactly 10, not more than or less than.");
         }
 
-        GatePass pass = gatePassRepository.findByCode(code).orElseThrow(() -> new GatePassDoesNotExist("GatePass does not exist"));
+        GatePass pass = gatePassRepository.findByCode(code).orElseThrow(() -> new GatePassDoesNotExistException("GatePass does not exist"));
 
         validatingIfCodeIsActive(pass);
 
@@ -97,7 +97,8 @@ public class GateAccessServices {
     public ValidateCodeResponse validateCode(ValidateCodeRequest request) {
 
         GatePass pass = gatePassRepository.findByCode(request.getCode()).orElseThrow(() -> new InvalidGatePassException("GatePass does not exist"));
-        Resident resident = residentRepository.findById(pass.getResidentId()).get();
+        Resident resident = residentRepository.findById(pass.getResidentId())
+                .orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));
         validatingIfCodeIsActive(pass);
 
         if (!pass.isValid()) {
@@ -114,19 +115,15 @@ public class GateAccessServices {
 //        response.setValid(true);
 //        response.setVisitorsName(pass.getVisitor().getName());
 //        response.setResidentName(resident.getName());
-
+            pass.setUsed(true);
+            gatePassRepository.save(pass);
         return map(request, pass, resident);
 
     }
 
     public GenerateResidentEntryCodeResponse generateResidentEntryCode(GenerateResidentEntryCodeRequest request) {
 
-        Resident resident = residentRepository.findById(request.getResidentId()).orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));;
-
-//        if (resident == null) {
-//            throw new ResidentDoesNotExistException("Resident does not exist.");
-//        }
-
+        Resident resident = residentRepository.findById(request.getResidentId()).orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));
 
         validateResidentIsActive(resident);
 
@@ -152,17 +149,18 @@ public class GateAccessServices {
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 //        response.setValidTill(pass.getExpirationDate().format(formatter));
 
+        gatePassRepository.save(pass);
         return map(resident, pass);
     }
 
 
     public GenerateExitCodeResponse generateExitCode(GenerateExitCodeRequest request) {
 
-        GatePass pass = gatePassRepository.findByCode(request.getCode()).orElseThrow(() -> new GatePassDoesNotExist("GatePass does not exist"));
+        GatePass pass = gatePassRepository.findByCode(request.getCode()).orElseThrow(() -> new GatePassDoesNotExistException("GatePass does not exist"));
 
 //        validateCodeExistence(pass);
 
-        Resident resident = residentRepository.findById(pass.getResidentId()).get();
+        Resident resident = residentRepository.findById(pass.getResidentId()).orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));
 
         if (!pass.isValid()) {
             throw new InvalidGatePassException("Code Has been disabled.");
@@ -209,9 +207,8 @@ public class GateAccessServices {
 
 
     public ExtendCodeResponse extendCode(ExtendCodeRequest request) {
-        GatePass pass = gatePassRepository.findByCode(request.getCode()).orElseThrow(() -> new GatePassDoesNotExist("GatePass does not exist"));
+        GatePass pass = gatePassRepository.findByCode(request.getCode()).orElseThrow(() -> new GatePassDoesNotExistException("GatePass does not exist"));
 
-//        validateCodeExistence(pass);
         validatingIfCodeIsActive(pass);
 
         if (pass.isUsed()){
@@ -227,6 +224,7 @@ public class GateAccessServices {
             newExpiration = midnight;
         }
         pass.setExpirationDate(newExpiration);
+        gatePassRepository.save(pass);
         return extendCodeMap(pass);
     }
 
@@ -236,12 +234,12 @@ public class GateAccessServices {
         List <ViewAllGatePassesResponse> gatePasses = new ArrayList<>();
 
         /**
-//         *     private String code;
-//         *     private String visitorsName;
-//         *     private String purposeOfComing;
-//         *     private String visitorsPhoneNumber;
-//         *     private String residentPhoneNumber;
-//         *     private String residentAddress;
+         *     private String code;
+         *     private String visitorsName;
+         *     private String purposeOfComing;
+         *     private String visitorsPhoneNumber;
+         *     private String residentPhoneNumber;
+         *     private String residentAddress;
          *
          */
 
@@ -258,7 +256,7 @@ public class GateAccessServices {
                 response.setVisitorsName("Resident GatePass");
             }
 
-            Resident resident   = residentRepository.findById(pass.getResidentId()).get();
+            Resident resident = residentRepository.findById(pass.getResidentId()).orElseThrow(() -> new ResidentDoesNotExistException("Resident does not exist"));
             response.setResidentName(resident.getName());
             response.setResidentPhoneNumber(resident.getPhoneNumber());
             response.setResidentAddress(resident.getHouseAddress());

@@ -35,7 +35,7 @@ public class ResidentControllers {
     public ResponseEntity<?> disableCode (@RequestParam String code){
         try {
             return ResponseEntity.status(200).body(gateAccessServices.disableCode(code));
-        }catch (InvalidGatePassException exception){
+        }catch (IllegalArgumentException exception){
             return ResponseEntity.status(404).body(exception.getMessage());
 
         }

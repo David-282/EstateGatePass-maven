@@ -12,6 +12,7 @@ import com.estatepass.exceptions.ResidentEnabledException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,10 +27,10 @@ public class ResidentManagementService {
 
 //    public OnboardResidentResponse onboardingResident(OnboardResidentRequest onboardResidentRequest) {
 //         Resident existingResident = residentRepository.findByPhoneNumber(onboardResidentRequest.getPhoneNumber()).orElseThrow(() -> new ResidentAlreadyRegisteredException("Resident Already Exist"));
-////        GatePass pass = gatePassRepository.findByCode(code).orElseThrow(() -> new GatePassDoesNotExist("GatePass does not exist"));
+//        GatePass pass = gatePassRepository.findByCode(code).orElseThrow(() -> new GatePassDoesNotExist("GatePass does not exist"));
 //
 //
-////        validationForDuplicate(existingResident);
+//        validationForDuplicate(existingResident);
 //
 //        Resident resident = map(onboardResidentRequest);
 //
@@ -105,6 +106,10 @@ public OnboardResidentResponse onboardingResident(OnboardResidentRequest onboard
             response.setEnabled(resident.isEnabled());
             response.setAddress(resident.getHouseAddress());
             response.setPhoneNumber(resident.getPhoneNumber());
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+
+            response.setDateRegistered(resident.getDateRegistered().format(formatter));
 
             residents.add(response);
 

@@ -1,11 +1,9 @@
-package com.estatepass.services; // 1. Ensure this matches the folder path exactly
-
-import com.estatepass.data.models.GatePass;
+package com.estatepass.services;
 import com.estatepass.data.repositories.GatePassRepository;
 import com.estatepass.data.repositories.ResidentRepository;
 import com.estatepass.dtos.requests.*;
 import com.estatepass.dtos.responses.*;
-import com.estatepass.exceptions.GatePassDoesNotExist;
+import com.estatepass.exceptions.GatePassDoesNotExistException;
 import com.estatepass.exceptions.InvalidGatePassException;
 import com.estatepass.exceptions.ResidentDisabledException;
 import com.estatepass.exceptions.ResidentDoesNotExistException;
@@ -22,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
-@SpringBootTest // 2. This requires your Main class to be in com.estatepass (or higher)
+@SpringBootTest
 class GateAccessServicesTest {
 
 
@@ -38,13 +36,11 @@ class GateAccessServicesTest {
     @Autowired
     GatePassRepository gatePassRepository;
 
+
     @BeforeEach
     void startWithThis() {
         residentRepository.deleteAll();
         gatePassRepository.deleteAll();
-
-//        gatePassServices = new GateAccessServices();
-//        residentService = new ResidentManagementService();
 
         OnboardResidentRequest firstRequest = new OnboardResidentRequest();
         firstRequest.setName("Ade Johnson");
@@ -64,7 +60,10 @@ class GateAccessServicesTest {
         residentId = firstResponse.getResidentId();
         secondResidentId = secondResponse.getResidentId();
     }
+    @Test
+    void run(){
 
+}
     private GenerateVisitorEntryCodeRequest buildVisitorRequest(String residentId) {
         GenerateVisitorEntryCodeRequest request = new GenerateVisitorEntryCodeRequest();
         request.setResidentId(residentId);
@@ -125,16 +124,6 @@ class GateAccessServicesTest {
                 gatePassServices.generateResidentEntryCode(buildResidentEntryRequest(residentId)));
     }
 
-//    @Test
-//    void testValidateCodeSuccessfully() {
-//        GenerateVisitorEntryCodeResponse generated = gatePassServices.generateVisitorsEntryCode(buildVisitorRequest(residentId));
-//        ValidateCodeRequest request = new ValidateCodeRequest();
-//        request.setCode(generated.getCode());
-//        ValidateCodeResponse response = gatePassServices.validateCode(request);
-//        assertNotNull(response);
-//        assertTrue(response.isValid());
-//        assertEquals("Bolaji", response.getVisitorsName());
-//    }
 
     @Test
     void testValidateNonExistentCodeThrowsException() {
@@ -154,9 +143,36 @@ class GateAccessServicesTest {
                 gatePassServices.validateCode(request));
     }
 
+//    @Test
+//    void testGenerateExitCodeSuccessfully() {
+//        GenerateVisitorEntryCodeResponse entryResponse = gatePassServices.generateVisitorsEntryCode(buildVisitorRequest(residentId));
+
+//
+//        ValidateCodeRequest  request = new ValidateCodeRequest();
+//        request.setCode(exitRequest.getCode());
+//        request.setCodeType(Type.ENTRY);
+//
+//         ValidateCodeResponse response = gatePassServices.validateCode(request);
+//
+//        GenerateExitCodeRequest exitRequest = new GenerateExitCodeRequest();
+//        exitRequest.setCode(entryResponse.getCode());
+//        exitRequest.setValidTill(LocalDateTime.now().plusHours(1));
+//
+//        GenerateExitCodeResponse exitResponse = gatePassServices.generateExitCode(exitRequest);
+//        assertNotNull(exitResponse);
+//        assertNotNull(exitResponse.getCode());
+//    }
+
     @Test
     void testGenerateExitCodeSuccessfully() {
         GenerateVisitorEntryCodeResponse entryResponse = gatePassServices.generateVisitorsEntryCode(buildVisitorRequest(residentId));
+
+        // validate first
+        ValidateCodeRequest validateRequest = new ValidateCodeRequest();
+        validateRequest.setCode(entryResponse.getCode());
+        gatePassServices.validateCode(validateRequest);
+
+        // then generate exit
         GenerateExitCodeRequest exitRequest = new GenerateExitCodeRequest();
         exitRequest.setCode(entryResponse.getCode());
         exitRequest.setValidTill(LocalDateTime.now().plusHours(1));
@@ -170,7 +186,7 @@ class GateAccessServicesTest {
         GenerateExitCodeRequest exitRequest = new GenerateExitCodeRequest();
         exitRequest.setCode("nonExistentCode");
         exitRequest.setValidTill(LocalDateTime.now().plusHours(1));
-        assertThrows(GatePassDoesNotExist.class, () ->
+        assertThrows(GatePassDoesNotExistException.class, () ->
                 gatePassServices.generateExitCode(exitRequest));
     }
 
@@ -190,7 +206,7 @@ class GateAccessServicesTest {
         ExtendCodeRequest extendRequest = new ExtendCodeRequest();
         extendRequest.setCode("nonExistentCode");
         extendRequest.setHoursToExtendBy(1);
-        assertThrows(GatePassDoesNotExist.class, () ->
+        assertThrows(GatePassDoesNotExistException.class, () ->
                 gatePassServices.extendCode(extendRequest));
     }
 //
@@ -204,8 +220,8 @@ class GateAccessServicesTest {
 
     @Test
     void testDisableNonExistentCodeThrowsException() {
-        assertThrows(GatePassDoesNotExist.class, () ->
-                gatePassServices.disableCode("nonExistentCode"));
+        assertThrows(GatePassDoesNotExistException.class, () ->
+                gatePassServices.disableCode("1234567890"));
     }
 
     @Test

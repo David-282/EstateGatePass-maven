@@ -8,5 +8,6 @@ public class ViewAllResidentsResponse {
     private String address;
     private String phoneNumber;
     private boolean isEnabled;
+    private String dateRegistered;
 
 }
